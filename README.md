@@ -4,11 +4,22 @@ A script to download and install FFMPEG to a Windows machine.
 FFMPEG builds are downloaded from [gyan.dev](https://www.gyan.dev/ffmpeg/builds/).
 
 
+## Usage
+
+```
+usage: install_ffmpeg.py [-h] [--install-dir INSTALL_DIR]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --install-dir INSTALL_DIR
+                        The path to install FFMPEG to (default is C:\)
+```
+
 ## How it works
 
 #### Step 1
 
-Make a folder called "FFMPEG" in the installation directory.
+A folder called "FFMPEG" is created in the installation directory.
 If that folder already exists and contains files then an error will be thrown.
 
 By default the install directory will be in "C:/", which then becomes "C:/FFMPEG".
@@ -17,15 +28,14 @@ and FFMPEG will be installed to `[YOUR DIRECTORY]/FFMEPG`.
 
 #### Step 2
 
-Download an FFMPEG build to the installation directory and check that the file's hash is correct
+An FFMPEG build is downloaded to the installation directory and the file's sha256 hash is checked
+against what it is supposed to be.
+The downloaded build is then decompressed
 
 #### Step 3
 
-Decompress the downloaded build
-
-#### Step 4
-
-Figure out where in the directory the actual ffmpeg executable is located and move it to the top level of the install directory.
+The script then tries to figure out where in the directory the actual
+FFMPEG executable is located and move it to the top level of the install directory.
 ```
 Before:                                 | After:
                                         |
@@ -43,10 +53,17 @@ Before:                                 | After:
         |____ README.txt                |
 ```
 
-#### Step 5
+#### Step 4
 
 Add FFMPEG to the PATH. This is done with the following command in powershell:
 ```
 [Environment]::SetEnvironmentVariable("Path", "[CURRENT OS PATH];[INSTALL_DIR]", "User")
 ```
-The script will prompt you before running this command
+The script will prompt you before running this command.
+
+If you do not want to run the command then you can add FFMPEG to your PATH another way.
+
+1. Search for "environment variables" in the start menu and click "Edit environment variables for your account"
+2. Scroll and find the "Path" variable in the "User variables" section and double click it
+3. Click "Browse" and navigate to the install directory. Select it and click "Ok"
+4. Click "Ok" and "Ok" again to exit
