@@ -1,6 +1,6 @@
 # FFMPEG Installer
 
-A script to download FFMPEG and install FFMPEG to a Windows machine.
+A script to download and install FFMPEG to a Windows machine.
 FFMPEG builds are downloaded from [gyan.dev](https://www.gyan.dev/ffmpeg/builds/).
 
 
