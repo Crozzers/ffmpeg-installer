@@ -7,32 +7,48 @@ FFMPEG builds are downloaded from [gyan.dev](https://www.gyan.dev/ffmpeg/builds/
 ## Usage
 
 ```
-usage: install_ffmpeg.py [-h] [--install-dir INSTALL_DIR]
+usage: install_ffmpeg.py [-h] [--install-dir INSTALL_DIR] [--build BUILD] [--format {7z,zip}]
 
 optional arguments:
   -h, --help            show this help message and exit
   --install-dir INSTALL_DIR
                         The path to install FFMPEG to (default is C:\)
+  --build BUILD         The build of FFMPEG to install
+  --format {7z,zip}     Preferred file format
 ```
 
 ## How it works
 
 #### Step 1
 
+An appropriate FFMPEG build is found. By default this will be the `release-full` build
+in `7z` format but this can be changed using the `--build` and `--format` flags.
+
+Available builds:
+* release-full (7z)
+* release-full-shared (7z)
+* release-essentials (7z and zip)
+* git-essentials (7z)
+* git-full (7z)
+
+To unpack `7z` archives you will need the `pyunpack` and `patool` python libraries installed.
+
+#### Step 2
+
 A folder called "FFMPEG" is created in the installation directory.
 If that folder already exists and contains files then an error will be thrown.
 
 By default the install directory will be in "C:/", which then becomes "C:/FFMPEG".
-To change the install directory, pass the `--install directory [YOUR DIRECTORY]` flag
+To change the install directory, pass the `--install-dir [YOUR DIRECTORY]` flag
 and FFMPEG will be installed to `[YOUR DIRECTORY]/FFMEPG`.
 
-#### Step 2
+#### Step 3
 
 An FFMPEG build is downloaded to the installation directory and the file's sha256 hash is checked
 against what it is supposed to be.
 The downloaded build is then decompressed
 
-#### Step 3
+#### Step 4
 
 The script then tries to figure out where in the directory the actual
 FFMPEG executable is located and move it to the top level of the install directory.
@@ -53,7 +69,7 @@ Before:                                 | After:
         |____ README.txt                |
 ```
 
-#### Step 4
+#### Step 5
 
 Add FFMPEG to the PATH. This is done with the following command in powershell:
 ```
