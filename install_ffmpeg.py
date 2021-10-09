@@ -16,7 +16,7 @@ except (ImportError, ModuleNotFoundError):
     AVAILABLE_7Z = False
 
 
-def get_ffmpeg_url(build='release-full', format='7z') -> str:
+def get_ffmpeg_url(build=None, format=None) -> str:
     '''
     Constructs an FFMPEG build download URL
 
@@ -27,8 +27,15 @@ def get_ffmpeg_url(build='release-full', format='7z') -> str:
     if format == '7z' and not AVAILABLE_7Z:
         raise ValueError('7z format unavailable as pyunpack and patool are not present')
 
-    if (url := f'{build}.{format}') in FFMPEG_BUILDS:
-        return f'https://gyan.dev/ffmpeg/builds/ffmpeg-{url}'
+    for ffbuild in FFMPEG_BUILDS:
+        if build is not None and ffbuild.split('.')[0] != build:
+            continue
+
+        if format is not None and ffbuild.split('.')[1] != format:
+            continue
+
+        return f'https://gyan.dev/ffmpeg/builds/ffmpeg-{ffbuild}'
+
     raise ValueError(f'{build} as format {format} does not exist')
 
 
@@ -201,11 +208,11 @@ if __name__ == '__main__':
         help=f'The path to install FFMPEG to (default is {INSTALL_DIR})'
     )
     parser.add_argument(
-        '--build', type=str, default='release-full',
+        '--build', type=str,
         help='The build of FFMPEG to install'
     )
     parser.add_argument(
-        '--format', default='7z', choices=('7z', 'zip'),
+        '--format', choices=('7z', 'zip'),
         help='Preferred file format'
     )
     args = parser.parse_args()
