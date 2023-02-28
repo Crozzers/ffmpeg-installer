@@ -11,14 +11,15 @@ pip install -r requirements.txt
 ## Usage
 
 ```
-usage: install_ffmpeg.py [-h] [--install-dir INSTALL_DIR] [--build BUILD] [--format {7z,zip}]
+usage: install_ffmpeg.py [-h] [--install-dir INSTALL_DIR] [--build BUILD] [--format {7z,zip}] [--overwrite]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   --install-dir INSTALL_DIR
                         The path to install FFMPEG to (default is C:\)
   --build BUILD         The build of FFMPEG to install
   --format {7z,zip}     Preferred file format
+  --overwrite           Overwrite existing install
 ```
 
 ## How it works
