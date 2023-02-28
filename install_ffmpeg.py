@@ -75,7 +75,7 @@ def get_sha256(fname) -> str:
     return hash_method.hexdigest()
 
 
-def make_empty_path(path):
+def make_empty_path(path, overwrite=False):
     '''
     Creates a filepath and makes sure that it is empty
 
@@ -86,7 +86,12 @@ def make_empty_path(path):
         os.mkdir(path)
     except FileExistsError as e:
         if os.listdir(path):
-            raise FileExistsError('install directory exists and is not empty') from e
+            if overwrite:
+                shutil.rmtree(path)
+                make_empty_path(path, overwrite=False)
+            else:
+                raise FileExistsError(
+                    'install directory exists and is not empty') from e
 
 
 class Downloader():
@@ -212,15 +217,19 @@ if __name__ == '__main__':
         help='The build of FFMPEG to install'
     )
     parser.add_argument(
-        '--format', choices=('7z', 'zip'),
+        '--format', choices=('7z', 'zip'), default='zip' if not AVAILABLE_7Z else '7z',
         help='Preferred file format'
+    )
+    parser.add_argument(
+        '--overwrite', action='store_true', help='Overwrite existing install', default=False
     )
     args = parser.parse_args()
 
-    dirs = InstallDirs(get_ffmpeg_url(args.build, args.format), args.install_dir)
+    dirs = InstallDirs(get_ffmpeg_url(
+        args.build, args.format), args.install_dir)
 
     print(f'Making install dir {dirs.install_path!r}')
-    make_empty_path(dirs.install_path)
+    make_empty_path(dirs.install_path, overwrite=args.overwrite)
 
     print(f'Downloading {dirs.url!r} to {dirs.download_dest!r}')
     downloader = Downloader(dirs.url, dirs.download_dest, dirs.hash_url)
