@@ -139,6 +139,12 @@ class Downloader():
                         ' By default Windows sets wget as an alias of Invoke-WebRequest.'
                         ' Make sure you have GNU wget installed and on your PATH'
                     ) from e
+            elif self.mode == 'curl':
+                # again, use CMD because of the alias problem. Don't need correct version warning here
+                # since windows now ships with curl
+                subprocess.check_output(
+                    ['cmd', '/c', 'curl', '-sLo', self.destination, self.url]
+                )
             else:
                 with open(self.destination, 'wb') as f:
                     with urllib.request.urlopen(self.url) as data:
@@ -265,10 +271,10 @@ if __name__ == '__main__':
         '--overwrite', action='store_true', help='Overwrite existing install', default=False
     )
     parser.add_argument(
-        '--downloader', choices=('default', 'windows', 'wget'), default='default', help=(
+        '--downloader', choices=('default', 'windows', 'wget', 'curl'), default='default', help=(
             'Control how files are downloaded.'
-            ' "default" will use python libraries to download, "windows" will use Invoke-WebRequest'
-            ' and "wget" will attempt to use GNU wget'
+            ' "default" will use python libraries to download, "windows" will use Invoke-WebRequest,'
+            ' "wget" and "curl" will attempt to use their respective CLI utilities'
         )
     )
     args = parser.parse_args()
