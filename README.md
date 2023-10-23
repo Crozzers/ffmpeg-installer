@@ -11,7 +11,7 @@ pip install -r requirements.txt
 ## Usage
 
 ```
-usage: install_ffmpeg.py [-h] [--install-dir INSTALL_DIR] [--build BUILD] [--format {7z,zip}] [--overwrite]
+usage: install_ffmpeg.py [-h] [--install-dir INSTALL_DIR] [--build BUILD] [--format {7z,zip}] [--overwrite] [--downloader {default,windows,wget,curl}]
 
 options:
   -h, --help            show this help message and exit
@@ -20,6 +20,8 @@ options:
   --build BUILD         The build of FFMPEG to install
   --format {7z,zip}     Preferred file format
   --overwrite           Overwrite existing install
+  --downloader {default,windows,wget,curl}
+                        Control how files are downloaded. "default" will use python libraries to download, "windows" will use Invoke-WebRequest, "wget" and "curl" will attempt to use their respective CLI utilities
 ```
 
 ## How it works
