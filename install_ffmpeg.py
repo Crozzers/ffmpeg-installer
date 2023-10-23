@@ -95,7 +95,7 @@ def make_empty_path(path, overwrite=False):
 
 
 class Downloader():
-    def __init__(self, url, destination, hash_url=None):
+    def __init__(self, url, destination, hash_url=None, mode='default'):
         '''
         Args:
             url (str): the URL of the resource to download
@@ -108,8 +108,10 @@ class Downloader():
             self.hash = urllib.request.urlopen(hash_url).read().decode()
         else:
             self.hash = None
-        self.data = urllib.request.urlopen(self.url)
-        self.size = self.data.length
+        self.mode = mode
+
+        with urllib.request.urlopen(self.url) as data:
+            self.size = data.length
 
     def download(self):
         '''
@@ -120,9 +122,15 @@ class Downloader():
         '''
         self.failed = False
         try:
-            with open(self.destination, 'wb') as f:
-                while (chunk := self.data.read(4096)):
-                    f.write(chunk)
+            if self.mode == 'windows':
+                subprocess.check_output(
+                    ['powershell', '-Command', 'Invoke-WebRequest', self.url, '-OutFile', self.destination]
+                )
+            else:
+                with open(self.destination, 'wb') as f:
+                    with urllib.request.urlopen(self.url) as data:
+                        while (chunk := data.read(4096)):
+                            f.write(chunk)
 
             if self.hash is None:
                 return
@@ -136,7 +144,25 @@ class Downloader():
 
     def progress(self) -> int:
         '''Returns number of downloaded bytes'''
-        return self.size - self.data.length
+        return os.path.getsize(self.destination)
+
+
+def download_ffmpeg(dirs: InstallDirs, mode: str):
+    '''Download the ffmpeg archive and print progress to the console'''
+    print_progress = lambda: print(  # noqa E731
+        f'Progress: {downloader.progress() / 10 ** 6:.2f}MB / {downloader.size / 10 ** 6:.2f}MB'
+    )
+    downloader = Downloader(dirs.url, dirs.download_dest, dirs.hash_url, mode=mode)
+    dl_thread = threading.Thread(target=downloader.download, daemon=True)
+    dl_thread.start()
+    time.sleep(1)
+    while dl_thread.is_alive():
+        print_progress()
+        time.sleep(5)
+    print_progress()
+    time.sleep(1)
+    if downloader.failed:
+        sys.exit(1)
 
 
 def decompress(path, destination):
@@ -223,6 +249,12 @@ if __name__ == '__main__':
     parser.add_argument(
         '--overwrite', action='store_true', help='Overwrite existing install', default=False
     )
+    parser.add_argument(
+        '--downloader', choices=('default', 'windows'), default='default', help=(
+            'Control how files are downloaded.'
+            ' "default" will use python libraries to download, "windows" will use Invoke-WebRequest'
+        )
+    )
     args = parser.parse_args()
 
     dirs = InstallDirs(get_ffmpeg_url(
@@ -232,16 +264,7 @@ if __name__ == '__main__':
     make_empty_path(dirs.install_path, overwrite=args.overwrite)
 
     print(f'Downloading {dirs.url!r} to {dirs.download_dest!r}')
-    downloader = Downloader(dirs.url, dirs.download_dest, dirs.hash_url)
-    dl_thread = threading.Thread(target=downloader.download, daemon=True)
-    dl_thread.start()
-    time.sleep(1)
-    while dl_thread.is_alive():
-        time.sleep(5)
-        print(f'Progress: {downloader.progress() / 10 ** 6:.2f}MB / {downloader.size / 10 ** 6:.2f}MB')
-    time.sleep(1)
-    if downloader.failed:
-        sys.exit(1)
+    download_ffmpeg(dirs, args.downloader)
 
     print(f'Unzipping {dirs.download_dest!r} to {dirs.unzip_dest!r}')
     decompress(dirs.download_dest, dirs.unzip_dest)
