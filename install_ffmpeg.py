@@ -126,6 +126,19 @@ class Downloader():
                 subprocess.check_output(
                     ['powershell', '-Command', 'Invoke-WebRequest', self.url, '-OutFile', self.destination]
                 )
+            elif self.mode == 'wget':
+                # use command prompt because powershell aliases wget to Invoke-WebRequest, which is much slower
+                try:
+                    subprocess.check_output(
+                        ['cmd', '/c', 'wget', self.url, '-O', self.destination, '-q']
+                    )
+                except (FileNotFoundError, subprocess.CalledProcessError) as e:
+                    print('Error calling wget:', e.stderr if isinstance(e, subprocess.CalledProcessError) else e)
+                    raise Exception(
+                        'Call to wget failed.'
+                        ' By default Windows sets wget as an alias of Invoke-WebRequest.'
+                        ' Make sure you have GNU wget installed and on your PATH'
+                    ) from e
             else:
                 with open(self.destination, 'wb') as f:
                     with urllib.request.urlopen(self.url) as data:
@@ -144,6 +157,8 @@ class Downloader():
 
     def progress(self) -> int:
         '''Returns number of downloaded bytes'''
+        if not os.path.isfile(self.destination):
+            return 0
         return os.path.getsize(self.destination)
 
 
@@ -159,10 +174,10 @@ def download_ffmpeg(dirs: InstallDirs, mode: str):
     while dl_thread.is_alive():
         print_progress()
         time.sleep(5)
-    print_progress()
     time.sleep(1)
     if downloader.failed:
         sys.exit(1)
+    print_progress()
 
 
 def decompress(path, destination):
@@ -250,9 +265,10 @@ if __name__ == '__main__':
         '--overwrite', action='store_true', help='Overwrite existing install', default=False
     )
     parser.add_argument(
-        '--downloader', choices=('default', 'windows'), default='default', help=(
+        '--downloader', choices=('default', 'windows', 'wget'), default='default', help=(
             'Control how files are downloaded.'
             ' "default" will use python libraries to download, "windows" will use Invoke-WebRequest'
+            ' and "wget" will attempt to use GNU wget'
         )
     )
     args = parser.parse_args()
