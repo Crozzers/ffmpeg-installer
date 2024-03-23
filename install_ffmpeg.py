@@ -26,25 +26,24 @@ def get_ffmpeg_url(build=None, format=None) -> str:
     if format == '7z' and not AVAILABLE_7Z:
         raise ValueError('7z format unavailable as pyunpack and patool are not present')
 
-    for ffbuild in FFMPEG_BUILDS:
-        if build is not None and ffbuild.split('.')[0] != build:
+    for ffbuild_name, formats in BUILDS.items():
+        if not (build is None or build == ffbuild_name):
             continue
 
-        if format is not None and ffbuild.split('.')[1] != format:
-            continue
+        for ffbuild_format, names in formats.items():
+            if not (format is None or format == ffbuild_format):
+                continue
 
-        return f'https://gyan.dev/ffmpeg/builds/ffmpeg-{ffbuild}'
-
-    for ffbuild in GITHUB_BUILDS:
-        if build is not None and ffbuild.split('.')[0] != build:
-            continue
-
-        if format is not None and ffbuild.split('.')[1] != format:
-            continue
-
-        github_version = urllib.request.urlopen('https://www.gyan.dev/ffmpeg/builds/release-version').read().decode()
-        assert github_version, 'failed to retreive latest version from github'
-        return f'https://github.com/GyanD/codexffmpeg/releases/download/{github_version}/ffmpeg-{github_version}-{ffbuild}'
+            if names[0]:
+                return f'https://gyan.dev/ffmpeg/builds/ffmpeg-{names[0]}.{ffbuild_format}'
+            if names[1]:
+                github_version = urllib.request.urlopen(
+                    'https://www.gyan.dev/ffmpeg/builds/release-version').read().decode()
+                assert github_version, 'failed to retreive latest version from github'
+                return (
+                    'https://github.com/GyanD/codexffmpeg/releases/download/'
+                    f'{github_version}/ffmpeg-{github_version}-{names[1]}.{ffbuild_format}'
+                )
 
     raise ValueError(f'{build} as format {format} does not exist')
 
@@ -252,23 +251,27 @@ def add_path_to_environment(path):
         print('User input was not "Y". Command not run')
 
 
-FFMPEG_BUILDS = [
-    'release-full.7z',
-    'release-full-shared.7z',
-    'release-essentials.zip',
-    'release-essentials.7z',
-    'git-essentials.7z',
-    'git-full.7z'
-]
-
-GITHUB_BUILDS = [
-    'essentials_build.7z',
-    'essentials_build.zip',
-    'full_build-shared.7z',
-    'full_build-shared.zip',
-    'full_build.7z',
-    'full_build.zip'
-]
+BUILDS = {
+    # format = { [name]: { [format]: ([gyan name], [github name]) } }
+    'release-full': {
+        '7z': ('release-full', 'full_build'),
+        'zip': (None, 'full_build')
+    },
+    'release-full-shared': {
+        '7z': ('release-full-shared', 'full_build-shared'),
+        'zip': (None, 'full_build-shared')
+    },
+    'release-essentials': {
+        '7z': ('release-essentials', 'essentials_build'),
+        'zip': ('release-essentials', 'essentials_build')
+    },
+    'git-essentials': {
+        '7z': ('git-essentials', None)
+    },
+    'git-full': {
+        '7z': ('git-full', None)
+    }
+}
 
 INSTALL_DIR = 'C:\\'
 
@@ -281,7 +284,9 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--build', type=str,
-        help='The build of FFMPEG to install', choices=[i.split('.')[0] for i in FFMPEG_BUILDS + GITHUB_BUILDS]
+        help='The build of FFMPEG to install',
+        choices=list(BUILDS.keys()),
+        default='release-full'
     )
     parser.add_argument(
         '--format', choices=('7z', 'zip'), default='zip' if not AVAILABLE_7Z else '7z',

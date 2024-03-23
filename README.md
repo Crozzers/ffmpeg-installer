@@ -1,7 +1,7 @@
 # FFMPEG Installer
 
 A script to download and install FFMPEG to a Windows machine.
-FFMPEG builds are downloaded from [gyan.dev](https://www.gyan.dev/ffmpeg/builds/).
+FFMPEG builds are either downloaded from [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) or [GyanD/codexffmpeg](https://github.com/GyanD/codexffmpeg).
 
 ## Setup
 ```
@@ -17,7 +17,8 @@ options:
   -h, --help            show this help message and exit
   --install-dir INSTALL_DIR
                         The path to install FFMPEG to (default is C:\)
-  --build BUILD         The build of FFMPEG to install
+  --build {release-full,release-full-shared,release-essentials,git-essentials,git-full}
+                        The build of FFMPEG to install
   --format {7z,zip}     Preferred file format
   --overwrite           Overwrite existing install
   --downloader {default,windows,wget,curl}
@@ -32,13 +33,13 @@ An appropriate FFMPEG build is found. By default this will be the `release-full`
 in `7z` format but this can be changed using the `--build` and `--format` flags.
 
 Available builds:
-* release-full (7z)
-* release-full-shared (7z)
+* release-full (7z and zip)
+* release-full-shared (7z and zip)
 * release-essentials (7z and zip)
 * git-essentials (7z)
 * git-full (7z)
 
-To unpack `7z` archives you will need the `pyunpack` and `patool` python libraries installed.
+To unpack `7z` archives you will need to install `patool`. You can do this with `pip install -r requirements.txt`
 
 #### Step 2
 
@@ -80,7 +81,7 @@ Before:                                 | After:
 
 Add FFMPEG to the PATH. This is done with the following command in powershell:
 ```
-[Environment]::SetEnvironmentVariable("Path", "[CURRENT OS PATH];[INSTALL_DIR]", "User")
+[Environment]::SetEnvironmentVariable("Path", "<CURRENT OS PATH>;<INSTALL_DIR>", "User")
 ```
 The script will prompt you before running this command.
 
