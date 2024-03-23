@@ -35,6 +35,17 @@ def get_ffmpeg_url(build=None, format=None) -> str:
 
         return f'https://gyan.dev/ffmpeg/builds/ffmpeg-{ffbuild}'
 
+    for ffbuild in GITHUB_BUILDS:
+        if build is not None and ffbuild.split('.')[0] != build:
+            continue
+
+        if format is not None and ffbuild.split('.')[1] != format:
+            continue
+
+        github_version = urllib.request.urlopen('https://www.gyan.dev/ffmpeg/builds/release-version').read().decode()
+        assert github_version, 'failed to retreive latest version from github'
+        return f'https://github.com/GyanD/codexffmpeg/releases/download/{github_version}/ffmpeg-{github_version}-{ffbuild}'
+
     raise ValueError(f'{build} as format {format} does not exist')
 
 
@@ -61,7 +72,8 @@ class InstallDirs():
         self.install_dir = os.path.abspath(install_dir)
         self.install_path = os.path.join(install_dir, 'FFMPEG')
         self.url = url
-        self.hash_url = url + '.sha256'
+        # can't get checksums from github
+        self.hash_url = None if 'github.com' in url else url + '.sha256'
         self.download_dest = os.path.join(self.install_path, os.path.basename(self.url))
         self.unzip_dest = self.download_dest.rstrip(os.path.splitext(self.download_dest)[-1])
 
@@ -249,6 +261,15 @@ FFMPEG_BUILDS = [
     'git-full.7z'
 ]
 
+GITHUB_BUILDS = [
+    'essentials_build.7z',
+    'essentials_build.zip',
+    'full_build-shared.7z',
+    'full_build-shared.zip',
+    'full_build.7z',
+    'full_build.zip'
+]
+
 INSTALL_DIR = 'C:\\'
 
 
@@ -260,7 +281,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--build', type=str,
-        help='The build of FFMPEG to install'
+        help='The build of FFMPEG to install', choices=[i.split('.')[0] for i in FFMPEG_BUILDS + GITHUB_BUILDS]
     )
     parser.add_argument(
         '--format', choices=('7z', 'zip'), default='zip' if not AVAILABLE_7Z else '7z',
