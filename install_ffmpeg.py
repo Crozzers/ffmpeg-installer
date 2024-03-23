@@ -9,8 +9,7 @@ import time
 import urllib.request
 import zipfile
 try:
-    import pyunpack
-    import patoolib  # noqa: F401
+    import patoolib
     AVAILABLE_7Z = True
 except (ImportError, ModuleNotFoundError):
     AVAILABLE_7Z = False
@@ -193,7 +192,7 @@ def decompress(path, destination):
             f.extractall(destination)
     else:
         os.mkdir(destination)
-        pyunpack.Archive(path).extractall(destination)
+        patoolib.extract_archive(path, outdir=destination)
 
 
 def move_ffmpeg_exe_to_top_level(top_level):
